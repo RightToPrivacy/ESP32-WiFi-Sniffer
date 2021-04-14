@@ -1,0 +1,108 @@
+#!/usr/bin/python3
+#
+# righttoprivacy@tutanota.com
+#
+# mac trk
+#
+
+from OuiLookup import OuiLookup
+import time
+import serial
+import os
+import datetime
+
+
+# removes temp files that may interfere w/updated values
+def del_temp():
+    os.system("rm -rf esplog")
+
+# Ensure no leftover files corrupt/interupt process
+del_temp()
+
+# time period of scan
+minutes = int(2)
+moment = datetime.datetime.now()
+ser = serial.Serial('/dev/ttyUSB0', 115200)
+timer_end = time.time() + 60 * minutes
+
+# Append raw sniffer line to file
+f = open("esplog", "a+")
+while time.time() < timer_end:
+    esp = ser.readline()
+    data = str(esp)
+    f.write(data + "\n")
+f.close
+
+ser.close()	# close usb serial
+
+time.sleep(1)
+uniqval = []
+setlist = set()
+
+# Open raw sniffer line file for reading
+with open("esplog", "r+") as f:
+    lines = f.readlines()
+    for line in lines:
+        macsig = line.split(" ")[3]
+        macsig = (macsig[5:9])
+        MAC1 = line.split(" ")[4]
+        MAC1 = (MAC1[6:23])
+        MAC2 = line.split(" ")[5]
+        MAC2 = (MAC2[6:23])
+        MAC3 = line.split(" ")[6]
+        MAC3 = (MAC3[6:23])
+        setlist.add((MAC1, macsig))
+        setlist.add((MAC2, macsig))
+        setlist.add((MAC3, macsig))
+f.close
+
+# function turn tuple into dictionary
+def Convert(tup, di):
+    for a, b in tup:
+        di.setdefault(a, []).append(b)
+    return di
+
+dictionary = {}
+
+print("BEGIN PRINT AS DICTIONARY")
+# Convert setlist tuple into dictionary
+Convert(setlist, dictionary)
+# Order by signal
+devbysig = {k: v for k, v in sorted(dictionary.items(), key=lambda item: item[1])}
+# DELETE FILTERED F filter addresses
+del devbysig['ff:ff:ff:ff:ff:ff']
+print("END PRINT AS DICTIONARY")
+
+# print ordered dict by sig
+print("BEGIN PRINT BY SIGNAL STRENGTH:")
+print(devbysig)
+print("END PRINT BY SIGNAL")
+# BEGIN PRINT DICTIONARY KEYS BY SIGNAL
+print("DIC KEYS BY SIGNAL STRENGTH (CLOSER -> FARTHER AWAY):")
+print(devbysig.keys())
+
+print("END DIC KEYS BY SIGNAL STRENGTH")
+
+print("DIC values: ")
+print(devbysig.values())
+print("END VALUES")
+
+time.sleep(2)
+
+# Remove temp files after use prevent mult run errors
+del_temp()
+
+# Print device OUI and model brand
+print("Show devices by sig strength:")
+defined = []
+for i in devbysig.keys():
+    defined.append(str(OuiLookup().query(i)))
+print(defined)
+
+# Create/append log: times, MAC addresses and hardware brand OUI ID
+with open("1.log", "a+") as logs:
+    logs.write("\n")
+    logs.write(str(moment) + "\n")
+    for x in devbysig.keys():
+        logs.write(str(OuiLookup().query(x)) + "\n")
+logs.close
