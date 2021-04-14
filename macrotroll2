@@ -1,8 +1,11 @@
 #!/usr/bin/python3
 #
+# Macrotroll Python by:
 # righttoprivacy@tutanota.com
+# More info on usage coming combined with multiple packages
 #
-# mac trk
+# Used in Concert with ESP-EOS by Łukasz Podkalicki fro ESP-32
+# 
 #
 
 from OuiLookup import OuiLookup
@@ -77,8 +80,8 @@ print("END PRINT AS DICTIONARY")
 print("BEGIN PRINT BY SIGNAL STRENGTH:")
 print(devbysig)
 print("END PRINT BY SIGNAL")
-# BEGIN PRINT DICTIONARY KEYS BY SIGNAL
-print("DIC KEYS BY SIGNAL STRENGTH (CLOSER -> FARTHER AWAY):")
+# BEGIN PRINT DICTIONARY KEYS SIGNAL
+print("DEVICES BY SIGNAL STRENGTH (CLOSER -> FARTHER AWAY):")
 print(devbysig.keys())
 
 print("END DIC KEYS BY SIGNAL STRENGTH")
